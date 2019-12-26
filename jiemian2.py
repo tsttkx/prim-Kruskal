@@ -81,7 +81,8 @@ class Ui_MainWindow(object):
         self.bian=[]
         self.ans_path=[]
         self.ans_path2=[]
-
+        self.i1=0
+        self.i2=0
         self.flag1=1
         MainWindow.setObjectName("MainWindow")
         MainWindow.setEnabled(True)
@@ -188,14 +189,39 @@ class Ui_MainWindow(object):
         self.pushButton_7.setObjectName("pushButton_7")
         self.verticalLayout_3.addWidget(self.pushButton_7)
 
+        # 这个是prim 的逐条显示增加                                                                                      #新增加的功能
+        self.pushButton_10 = QtWidgets.QPushButton(self.widget)
+        self.pushButton_10.setObjectName("pushButton_10")
+        self.verticalLayout_3.addWidget(self.pushButton_10)
+        #逐条减少
+        self.pushButton_13= QtWidgets.QPushButton(self.widget)
+        self.pushButton_13.setObjectName("pushButton_13")
+        self.verticalLayout_3.addWidget(self.pushButton_13)
+
+
         self.pushButton_8 = QtWidgets.QPushButton(self.widget)
         self.pushButton_8.setObjectName("pushButton_8")
         self.verticalLayout_3.addWidget(self.pushButton_8)
+
+        # 这个是克鲁斯卡尔   逐条显示增加                                                                                 #新增加的功能
+        self.pushButton_11 = QtWidgets.QPushButton(self.widget)
+        self.pushButton_11.setObjectName("pushButton_11")
+        self.verticalLayout_3.addWidget(self.pushButton_11)
+        #逐条减少
+        self.pushButton_12 = QtWidgets.QPushButton(self.widget)
+        self.pushButton_12.setObjectName("pushButton_12")
+        self.verticalLayout_3.addWidget(self.pushButton_12)
 
         self.pushButton_6 = QtWidgets.QPushButton(self.widget)
         self.pushButton_6.setObjectName("pushButton_6")
         self.verticalLayout_3.addWidget(self.pushButton_6)
         MainWindow.setCentralWidget(self.centralwidget)
+
+
+
+
+
+
 
 
         #这个是最下面最小生成树的代价
@@ -253,7 +279,7 @@ class Ui_MainWindow(object):
             item=QListWidgetItem()
             item.setText(self.new_kr.place_name[i])
             self.listWidget.addItem(item)
-        self.pyecharts_update()
+        self.pyecharts_update12(1,0,0,0,0,0,0)
 
         #插入操作
         self.pushButton_5.clicked.connect(self.update1)
@@ -264,22 +290,30 @@ class Ui_MainWindow(object):
         self.listWidget_2.clicked.connect(self.check1)
         self.pushButton_2.clicked.connect(self.remove1)
 
-        #可视化
-        self.pushButton_4.clicked.connect(self.pyecharts_update)
+
 
         # 进行写文件
         self.pushButton_6.clicked.connect(self.write)
 
         #prim 算法
         self.pushButton_3.clicked.connect(self.prim)
-
-        #显示路径向量，然后就是一点的是，肯定是知道  能不能形成一个  最小生成树然后再进行  显示路径向量
-        self.pushButton_7.clicked.connect(self.prim_show_path)
-
-        self.pushButton_8.clicked.connect(self.Kruskal_show)
+        #克鲁斯卡尔算法
         self.pushButton_9.clicked.connect(self.Kruskal)
 
-
+        # 可视化
+        self.pushButton_4.clicked.connect(lambda: (self.pyecharts_update12(1,0,0,0,0,0,0)))
+        #prim 路径
+        self.pushButton_7.clicked.connect(lambda:(self.pyecharts_update12(0,1,0,0,0,0,0)))
+        # prim 增加边
+        self.pushButton_10.clicked.connect(lambda: (self.pyecharts_update12(0,0,1,0,0,0,0)))
+        # prim 减少边
+        self.pushButton_13.clicked.connect(lambda: (self.pyecharts_update12(0,0,0,1,0,0,0)))
+        #克鲁斯卡尔 路径
+        self.pushButton_8.clicked.connect(lambda:(self.pyecharts_update12(0,0,0,0,1,0,0)))
+        #克鲁斯卡尔增加边
+        self.pushButton_11.clicked.connect(lambda: (self.pyecharts_update12(0,0,0,0,0,1,0)))
+        #克鲁斯卡尔减少边
+        self.pushButton_12.clicked.connect(lambda: (self.pyecharts_update12(0,0,0,0,0,0,1)))
 
     #删除点
     def check(self,index):
@@ -355,6 +389,10 @@ class Ui_MainWindow(object):
         self.pushButton_7.setText(_translate("MainWindow", "prim路径"))
         self.pushButton_8.setText(_translate("MainWindow", "Kruskal路径"))
         self.pushButton_9.setText(_translate("MainWindow", "Kruskal"))
+        self.pushButton_10.setText(_translate("MainWindow", "prim上一条"))
+        self.pushButton_13.setText(_translate("MainWindow", "prim下一条"))
+        self.pushButton_11.setText(_translate("MainWindow", "Kruskal上一条"))
+        self.pushButton_12.setText(_translate("MainWindow", "Kruskal下一条"))
 
     #插入点更新
     def update1(self):
@@ -544,140 +582,96 @@ class Ui_MainWindow(object):
                 f.write(self.listWidget_2.item(i).text()+'\n')
 
 
-    #克鲁斯卡尔显示路径
-    def Kruskal_show(self):
+
+    #一堆的显示图像 
+    def pyecharts_update12(self, show_all, show_prim, prim_dele,prim_add ,show_Kruskal,   Kruskal_dele,Kruskal_add):  #
+        def diff_set(a, b):
+            a_, b_ = map(lambda x: {frozenset(k): k for k in x}, [a, b])
+            return [a_[k] for k in a_.keys() - b_.keys()]
+
         place = list(zip(self.new_kr.place_name, range(self.new_kr.m)))
-        if len(self.ans_path2):
+        self.bian = list(
+            (self.new_kr.place_name[x], self.new_kr.place_name[y]) for x in range(self.new_kr.m) for y in  # 算一下边
+            range(x + 1, self.new_kr.m) if self.new_kr.matrix[x][y] != float('inf'))
+
+        attr1 = self.bian
+        if show_all:
+            attr2 = []
+            attr3 = attr1
+            self.i1=self.i2=0
+        elif show_prim:
+            attr2 = self.ans_path
+            attr3 = diff_set(attr1, attr2)
+            print('prim路径数量为',len(attr2))
+        elif show_Kruskal:
             attr2 = self.ans_path2
-        else:
-            attr2=[]
-        def diff_set(a, b):
-            a_, b_ = map(lambda x: {frozenset(k): k for k in x}, [a, b])
-            return [a_[k] for k in a_.keys() - b_.keys()]
-        attr1=diff_set(self.bian,attr2)
+            attr3 = diff_set(attr1, attr2)
+            print('克鲁斯卡尔路径数量为', len(attr2))
+        elif prim_add:
+            self.i1+=1
+            if self.i1>self.new_kr.m-1:
+                self.i1 =0
+            attr2 = self.ans_path[:self.i1]
+            attr3 = diff_set(attr1, attr2)
 
-        # print(attr1)
-        # print(attr2)
+            print('prim',self.i1)
+        elif prim_dele:
+            self.i1 -= 1
+            if self.i1 < 0:
+                self.i1 = self.new_kr.m-1
+            attr2 = self.ans_path[:self.i1]
+            attr3 = diff_set(attr1, attr2)
+            print('prim',self.i1)
 
-        geo = (
-            Geo(init_opts={"width": 1300, "bg_color": "#2a59"})
-                .add_schema(
-                maptype="china",
-                itemstyle_opts=opts.ItemStyleOpts(color="#323c48", border_color="#111"),
-            )
-                .add(
-                "",
-                place,
-                type_=ChartType.EFFECT_SCATTER,
-                color="green",
-            )
-                .add(
-                "",
-                attr1,
-                type_=ChartType.LINES,
-                linestyle_opts=opts.LineStyleOpts(curve=0.2, color='red'),
-            )
-                .add(
-                "",  # 这个就是我设置的路径，最后生成的路径使用另一种颜色完成
-                attr2,
-                type_=ChartType.LINES,
-                linestyle_opts=opts.LineStyleOpts(curve=0.2, color='white'),
-            )
-                .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-                .set_global_opts(title_opts=opts.TitleOpts(title="城市交通图"))
-        )
-        geo.render(path='D:/pycharm/untitled/GUI/图.html')
-        self.browser.load(QUrl("file:///D:/pycharm/untitled/GUI/图.html"))
+        elif Kruskal_add:
+            self.i2+=1
+            if self.i2>self.new_kr.m-1:
+                self.i2=0
+            attr2 = self.ans_path2[:self.i2]
+            attr3 = diff_set(attr1, attr2)
 
+            print('Kruskal',self.i2)
+        elif Kruskal_dele:
+            self.i2 -= 1
+            if self.i2 < 0:
+                self.i2 = self.new_kr.m-1
+            attr2 = self.ans_path2[:self.i2]
+            attr3 = diff_set(attr1, attr2)
 
-
-    #prim显示路径
-    def prim_show_path(self):
-        place = list(zip(self.new_kr.place_name, range(self.new_kr.m)))
-
-        if self.flag1:
-            attr2=self.ans_path
-        else:
-            attr2=[]
-
-        def diff_set(a, b):
-            a_, b_ = map(lambda x: {frozenset(k): k for k in x}, [a, b])
-            return [a_[k] for k in a_.keys() - b_.keys()]
-        attr1=diff_set(self.bian,attr2)
-
-        # print(attr1)
-        # print(attr2)
+            print('Kruskal',self.i2)
 
         geo = (
             Geo(init_opts={"width": 1300, "bg_color": "#2a59"})
                 .add_schema(
                 maptype="china",
                 itemstyle_opts=opts.ItemStyleOpts(color="#323c48", border_color="#111"),
+                # label_opts=opts.LabelOpts(is_show=True)
             )
-                .add(
+                .add(  # 这个不用动
                 "",
                 place,
-                type_=ChartType.EFFECT_SCATTER,
-                color="green",
-            )
-                .add(
-                "",
-                attr1,
-                type_=ChartType.LINES,
-                linestyle_opts=opts.LineStyleOpts(curve=0.2, color='red'),
-            )
-                .add(
-                "",
-                     attr2,
-                    type_=ChartType.LINES,
-                     linestyle_opts=opts.LineStyleOpts(curve=0.2,color='white'),
-                )
-                .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-                .set_global_opts(title_opts=opts.TitleOpts(title="城市交通图"))
-        )
-        geo.render(path='D:/pycharm/untitled/GUI/图.html')
-        self.browser.load(QUrl("file:///D:/pycharm/untitled/GUI/图.html"))
-
-
-
-    #进行可视化
-    def pyecharts_update(self):
-        place=list(zip(self.new_kr.place_name,range(self.new_kr.m)))
-        self.bian=list((self.new_kr.place_name[x],self.new_kr.place_name[y]) for x in range(self.new_kr.m) for y in range(x+1,self.new_kr.m) if self.new_kr.matrix[x][y]!=float('inf'))
-
-        # for i in range(self.listWidget_2.count()):
-        #     item=self.listWidget_2.item(i).text().split(' ')
-        #     self.bian.append((item[0],item[1]))
-        # print(self.bian)
-
-        geo = (
-             Geo(init_opts = {"width":1300,"bg_color":"#2a59"})
-                .add_schema(
-                maptype="china",
-                itemstyle_opts=opts.ItemStyleOpts(color="#323c48", border_color="#111"),
-                 # label_opts=opts.LabelOpts(is_show=True)
-            )
-                .add(
-                "",
-                 place,
                 type_=ChartType.EFFECT_SCATTER,
                 color="green",
                 label_opts=opts.LabelOpts(is_show=True)
             )
-                .add(
+                .add(  # 路径以外的边
                 "",
-                 self.bian,
-                 type_=ChartType.LINES,
+                attr3,
+                type_=ChartType.LINES,
                 linestyle_opts=opts.LineStyleOpts(curve=0.2, color='red'),
-
-
             )
+                .add(  # 路径的边
+                "",
+                attr2,
+                type_=ChartType.LINES,
+                linestyle_opts=opts.LineStyleOpts(curve=0.2, color='white'),
+            )
+
                 .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
                 .set_global_opts(title_opts=opts.TitleOpts(title="城市交通图"))
         )
         geo.render(path='D:/pycharm/untitled/GUI/图.html')
         self.browser.load(QUrl("file:///D:/pycharm/untitled/GUI/图.html"))
-
 
 
 #主函数
