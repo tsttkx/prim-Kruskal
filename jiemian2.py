@@ -84,6 +84,7 @@ class Ui_MainWindow(object):
         self.i1=0
         self.i2=0
         self.flag1=1
+        self.flag2=1
         MainWindow.setObjectName("MainWindow")
         MainWindow.setEnabled(True)
         MainWindow.resize(1920, 1000)
@@ -189,7 +190,7 @@ class Ui_MainWindow(object):
         self.pushButton_7.setObjectName("pushButton_7")
         self.verticalLayout_3.addWidget(self.pushButton_7)
 
-        # 这个是prim 的逐条显示增加                                                                                      #新增加的功能
+        # 这个是prim 的逐条显示增加
         self.pushButton_10 = QtWidgets.QPushButton(self.widget)
         self.pushButton_10.setObjectName("pushButton_10")
         self.verticalLayout_3.addWidget(self.pushButton_10)
@@ -203,7 +204,7 @@ class Ui_MainWindow(object):
         self.pushButton_8.setObjectName("pushButton_8")
         self.verticalLayout_3.addWidget(self.pushButton_8)
 
-        # 这个是克鲁斯卡尔   逐条显示增加                                                                                 #新增加的功能
+        # 这个是克鲁斯卡尔   逐条显示增加
         self.pushButton_11 = QtWidgets.QPushButton(self.widget)
         self.pushButton_11.setObjectName("pushButton_11")
         self.verticalLayout_3.addWidget(self.pushButton_11)
@@ -440,6 +441,8 @@ class Ui_MainWindow(object):
                 item.setText(string)
                 self.listWidget_2.addItem(item)
 
+
+
         else:
             pass
 
@@ -459,8 +462,9 @@ class Ui_MainWindow(object):
 
     #克鲁斯卡尔算法
     def Kruskal(self):
+        self.flag2 = 1                                                                                                  #初始化是要进行的
         self.ans_path2=[]
-
+        self.i2=0
         def q_sort(L, left, right):
             if left < right:
                 pivot = Partition(L, left, right)
@@ -526,11 +530,13 @@ class Ui_MainWindow(object):
         else:
             self.textBrowser2.setText('构不成最小生成树')
             self.ans_path2.clear()
+            self.flag2=0
 
 
     #prim算法
     def prim(self):
-        self.flag1=1
+        self.i1=0
+        self.flag1=1                                                                                                    #初始化
         ans=0
         self.ans_path=[]
         dis=[0]*100
@@ -562,7 +568,8 @@ class Ui_MainWindow(object):
                     pre[j]=pos
         if self.flag1:
             self.textBrowser.setText(str(ans))
-
+        else:
+            self.ans_path.clear()
 
 
 
@@ -583,7 +590,8 @@ class Ui_MainWindow(object):
 
 
 
-    #一堆的显示图像 
+
+    #一堆的显示图像
     def pyecharts_update12(self, show_all, show_prim, prim_dele,prim_add ,show_Kruskal,   Kruskal_dele,Kruskal_add):  #
         def diff_set(a, b):
             a_, b_ = map(lambda x: {frozenset(k): k for k in x}, [a, b])
@@ -600,10 +608,14 @@ class Ui_MainWindow(object):
             attr3 = attr1
             self.i1=self.i2=0
         elif show_prim:
+            if self.flag1 == 0:
+                self.ans_path.clear()
             attr2 = self.ans_path
             attr3 = diff_set(attr1, attr2)
             print('prim路径数量为',len(attr2))
         elif show_Kruskal:
+            if self.flag2 == 0:
+                self.ans_path2.clear()
             attr2 = self.ans_path2
             attr3 = diff_set(attr1, attr2)
             print('克鲁斯卡尔路径数量为', len(attr2))
